@@ -11,12 +11,10 @@ Usage:
     uv run bot.py --test "hello"            # Test mode - natural language
     uv run bot.py                           # Bot mode (requires BOT_TOKEN)
 """
-
 import argparse
 import sys
 from pathlib import Path
-
-# Ensure bot/ directory is in path for imports
+# Ensure bot/ directory is in path for importasdfafs
 sys.path.insert(0, str(Path(__file__).parent))
 
 from handlers import handle_start, handle_help, handle_health, handle_labs, handle_scores

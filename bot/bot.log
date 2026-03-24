@@ -1,0 +1,4 @@
+nohup: ignoring input
+Bot mode not implemented yet. Use --test mode for testing.
+Example: uv run bot.py --test '/start'
+Example: uv run bot.py --test 'what labs are available'

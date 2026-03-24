@@ -13,12 +13,19 @@ Usage:
 """
 
 import argparse
+import asyncio
+import logging
 import sys
 from pathlib import Path
 
 # Ensure bot/ directory is in path for imports
 sys.path.insert(0, str(Path(__file__).parent))
 
+from aiogram import Bot, Dispatcher, types
+from aiogram.filters import Command, CommandStart
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+
+from config import settings
 from handlers import handle_start, handle_help, handle_health, handle_labs, handle_scores
 from handlers.intent_router import route as route_intent
 
@@ -71,6 +78,81 @@ def run_test_mode(command_text: str) -> None:
     print(response)
 
 
+async def run_bot_mode() -> None:
+    """Run the Telegram bot using aiogram.
+
+    This connects to Telegram and handles messages via the same handlers
+    used in --test mode.
+    """
+    if not settings.bot_token:
+        print("Error: BOT_TOKEN is required for bot mode.")
+        print("Set BOT_TOKEN in .env.bot.secret or .env.docker.secret")
+        sys.exit(1)
+
+    # Configure logging
+    logging.basicConfig(level=logging.INFO)
+
+    # Create bot and dispatcher
+    bot = Bot(token=settings.bot_token)
+    dp = Dispatcher()
+
+    # Create keyboard buttons for common actions
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="/start"), KeyboardButton(text="/help")],
+            [KeyboardButton(text="/health"), KeyboardButton(text="/labs")],
+        ],
+        resize_keyboard=True,
+    )
+
+    # /start handler
+    @dp.message(CommandStart())
+    async def start_handler(message: types.Message) -> None:
+        response = handle_start()
+        await message.answer(response, reply_markup=keyboard)
+
+    # /help handler
+    @dp.message(Command("help"))
+    async def help_handler(message: types.Message) -> None:
+        response = handle_help()
+        await message.answer(response, reply_markup=keyboard)
+
+    # /health handler
+    @dp.message(Command("health"))
+    async def health_handler(message: types.Message) -> None:
+        response = handle_health()
+        await message.answer(response, reply_markup=keyboard)
+
+    # /labs handler
+    @dp.message(Command("labs"))
+    async def labs_handler(message: types.Message) -> None:
+        response = handle_labs()
+        await message.answer(response, reply_markup=keyboard)
+
+    # /scores handler
+    @dp.message(Command("scores"))
+    async def scores_handler(message: types.Message) -> None:
+        # Extract argument after /scores
+        args = message.text.split(maxsplit=1)
+        lab = args[1] if len(args) > 1 else None
+        response = handle_scores(lab)
+        await message.answer(response, reply_markup=keyboard)
+
+    # Natural language handler (for non-command messages)
+    @dp.message()
+    async def natural_language_handler(message: types.Message) -> None:
+        text = message.text or ""
+        if text.startswith("/"):
+            # Already handled by command handlers
+            return
+        response = route_intent(text, debug=False)
+        await message.answer(response, reply_markup=keyboard)
+
+    # Start polling
+    print("Application started")
+    await dp.start_polling(bot)
+
+
 def main() -> None:
     """Main entry point."""
     parser = argparse.ArgumentParser(description="LMS Telegram Bot")
@@ -80,19 +162,16 @@ def main() -> None:
         metavar="COMMAND",
         help="Run in test mode with the given command (e.g., --test '/start' or --test 'hello')",
     )
-    
+
     args = parser.parse_args()
-    
+
     if args.test:
         # Test mode: call handler directly, print result, exit
         run_test_mode(args.test)
         sys.exit(0)
     else:
-        # Bot mode: connect to Telegram (TODO: implement)
-        print("Bot mode not implemented yet. Use --test mode for testing.")
-        print("Example: uv run bot.py --test '/start'")
-        print("Example: uv run bot.py --test 'what labs are available'")
-        sys.exit(1)
+        # Bot mode: connect to Telegram
+        asyncio.run(run_bot_mode())
 
 
 if __name__ == "__main__":

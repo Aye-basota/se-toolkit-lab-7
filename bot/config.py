@@ -7,14 +7,19 @@ Loads secrets from .env.bot.secret file. This pattern:
 - Validates required fields at startup
 """
 
+from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Path to .env.bot.secret relative to this config.py file
+ENV_FILE = Path(__file__).parent.parent / ".env.bot.secret"
 
 
 class BotSettings(BaseSettings):
     """Bot configuration loaded from environment variables."""
 
     model_config = SettingsConfigDict(
-        env_file=".env.bot.secret",
+        env_file=str(ENV_FILE),
         env_file_encoding="utf-8",
         extra="ignore",
     )

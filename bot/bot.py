@@ -3,7 +3,7 @@
 LMS Telegram Bot — Entry point.
 
 Supports two modes:
-1. --test mode: Run handlers directly without Telegram (for development/testing)
+1. --test mode: Run hadfasdfdlers directly without Telegram (for development/testing)
 2. Bot mode: Connect to Telegram and handle messages via aiogram
 
 Usage:

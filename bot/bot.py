@@ -9,7 +9,7 @@ Supports two modes:ikjggk
 Usage:
     uv run bot.py --test "/start"           # Test mode - slash command
     uv run bot.py --test "hello"            # Test mode - natural language
-    uv run bot.py                           # Bot mode (requires BOT_TOKEN)
+    uv run bot.py    iasdgasdf                       # Bot mode (requires BOT_TOKEN)
 """
 
 import argparse
